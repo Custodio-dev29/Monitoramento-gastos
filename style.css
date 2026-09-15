@@ -271,6 +271,33 @@ input:focus, select:focus { outline: 2px solid var(--primary); border-color: tra
 .del-btn { background: var(--red); }
 .ghost { background: transparent; color: var(--primary); border: 1px solid var(--border); }
 .ghost:hover { background: var(--bg); }
+.danger-text { color: var(--red); }
+.danger-text:hover { background: rgba(220,38,38,.06); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-row .btn, .btn-row label.btn { flex: 1; min-width: 120px; text-align: center; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+.login-overlay {
+  position: fixed; inset: 0; z-index: 30;
+  background: linear-gradient(160deg, #1e293b, #0f172a);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.login-overlay[hidden] { display: none; }
+.login-box {
+  background: #fff; border-radius: 16px; padding: 28px;
+  width: 100%; max-width: 340px; text-align: center;
+}
+.login-icon {
+  width: 48px; height: 48px; margin: 0 auto 12px;
+  background: var(--primary); color: #fff;
+  border-radius: 12px; font-size: 24px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.login-box h2 { font-size: 1.1rem; margin-bottom: 4px; }
+.login-box p { font-size: 0.85rem; color: var(--muted); margin-bottom: 16px; }
+.login-box form { display: flex; flex-direction: column; gap: 10px; }
+.login-erro { color: var(--red); font-size: 0.8125rem; margin-top: 4px; }
 
 body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 
@@ -289,7 +316,7 @@ body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 520px) {
   main { padding: 12px; }
-  .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cards { grid-template-columns: 1fr; gap: 10px; }
   .val-group { flex-wrap: wrap; }
   .val-group input, .val-group select { flex-basis: 100%; }
   .val-group .btn { width: 100%; }
@@ -298,7 +325,4 @@ body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   .cat-bar { min-width: 40%; }
   .cat-row .val { width: auto; }
   .cat-row .pct { width: auto; }
-}
-@media (max-width: 360px) {
-  .cards { grid-template-columns: 1fr; }
 }

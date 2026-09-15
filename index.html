@@ -34,6 +34,10 @@
       <svg viewBox="0 0 24 24" style="fill:none;stroke-width:1.6"><path d="M16.86 2.7a2 2 0 0 1 2.83 0l1.6 1.6a2 2 0 0 1 0 2.83L9 19.5 3 21l1.5-6z"/></svg>
       <span>Editar</span>
     </button>
+    <button class="side-item" data-tab="config">
+      <svg viewBox="0 0 24 24" style="fill:none;stroke-width:1.6"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.55 1.7 1.7 0 0 0-1.87.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.03 1.7 1.7 0 0 0-.33-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.02 1.55 1.7 1.7 0 0 0 1.87-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1.02H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.03z"/></svg>
+      <span>Configurações</span>
+    </button>
   </nav>
   <div class="side-foot">Dados salvos neste aparelho.</div>
 </aside>
@@ -175,6 +179,30 @@
         <div class="list" id="listaEditar"></div>
       </section>
     </section>
+
+    <section id="aba-config" class="aba hidden">
+      <section class="painel">
+        <h2>Dados</h2>
+        <p class="hint">Exporte para backup ou importe de outro dispositivo.</p>
+        <div class="btn-row">
+          <button class="btn" id="btnExportar">Exportar dados</button>
+          <label class="btn ghost" for="importFile">Importar dados</label>
+          <input type="file" id="importFile" accept=".json" hidden>
+        </div>
+      </section>
+
+      <section class="painel">
+        <h2>Senha de acesso</h2>
+        <p class="hint" id="senhaStatus">Nenhuma senha definida.</p>
+        <form id="formSenha">
+          <input type="password" id="senhaInput" placeholder="Digite uma senha" autocomplete="new-password">
+          <div class="btn-row">
+            <button class="btn" type="submit" id="btnSenhaSalvar">Salvar senha</button>
+            <button class="btn ghost danger-text" type="button" id="btnSenhaRemover" style="display:none">Remover senha</button>
+          </div>
+        </form>
+      </section>
+    </section>
   </main>
 </div>
 
@@ -192,6 +220,19 @@
           <button type="submit" class="btn">Salvar</button>
         </div>
       </div>
+    </form>
+  </div>
+</div>
+
+<div class="login-overlay" id="loginOverlay" hidden>
+  <div class="login-box">
+    <div class="login-icon">฿</div>
+    <h2>Controle de Gastos</h2>
+    <p>Digite a senha para acessar</p>
+    <form id="formLogin">
+      <input type="password" id="loginSenha" placeholder="Senha" required autocomplete="current-password">
+      <button class="btn" type="submit">Entrar</button>
+      <div class="login-erro" id="loginErro" hidden>Senha incorreta</div>
     </form>
   </div>
 </div>

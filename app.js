@@ -16,7 +16,18 @@
     try {
       const raw = localStorage.getItem("controleGastos");
       const d = raw ? JSON.parse(raw) : { receitas: [], gastos: [], vista: {} };
-      if (!d.cartao) d.cartao = [];
+      if (!Array.isArray(d.receitas)) d.receitas = [];
+      if (!Array.isArray(d.gastos)) d.gastos = [];
+      if (!Array.isArray(d.cartao)) d.cartao = [];
+      d.receitas = d.receitas.filter(r => typeof r.descricao === "string" && r.descricao.length <= 200);
+      d.gastos = d.gastos.filter(g => typeof g.descricao === "string" && g.descricao.length <= 200);
+      d.cartao.forEach(c => {
+        if (typeof c.descricao !== "string" || c.descricao.length > 200) c.descricao = "Compra no cartão";
+        c.parcelas = Math.max(1, Math.min(480, Math.floor(Number(c.parcelas)) || 1));
+        c.valorTotal = Number(c.valorTotal) || 0;
+      });
+      d.gastos.forEach(g => { g.valor = Number(g.valor) || 0; });
+      d.receitas.forEach(r => { r.valor = Number(r.valor) || 0; });
       return d;
     } catch (e) {
       return { receitas: [], gastos: [], cartao: [], vista: {} };
@@ -206,7 +217,7 @@
       const badge = item._tipo === "receita" ? '<span class="tipo-badge rec">REC</span>' :
                     item._tipo === "gasto" ? '<span class="tipo-badge gas">GAS</span>' :
                     '<span class="tipo-badge car">CART</span>';
-      const meta = badge + (item.categoria ? " • " + item.categoria : "") + (item.parcelas > 1 ? " • " + item.parcelas + "x" : "");
+      const meta = badge + escapeHTML((item.categoria ? " • " + item.categoria : "") + (item.parcelas > 1 ? " • " + item.parcelas + "x" : ""));
       const cls = item._tipo === "receita" ? "valor entrada" : "valor saida";
       const sinal = item._tipo === "receita" ? "+ " : "− ";
       div.innerHTML =
@@ -253,18 +264,18 @@
     }
 
     if (tipo === "receita") {
-      campo("Valor (R$)", '<input type="number" id="mValor" min="0" step="0.01" value="' + item.valor + '" required>');
-      campo("Mês", '<input type="month" id="mMes" value="' + item.mes + '" required>');
+      campo("Valor (R$)", '<input type="number" id="mValor" min="0" step="0.01" value="' + escapeHTML(String(item.valor)) + '" required>');
+      campo("Mês", '<input type="month" id="mMes" value="' + escapeHTML(item.mes) + '" required>');
     } else if (tipo === "gasto") {
-      campo("Valor (R$)", '<input type="number" id="mValor" min="0" step="0.01" value="' + item.valor + '" required>');
+      campo("Valor (R$)", '<input type="number" id="mValor" min="0" step="0.01" value="' + escapeHTML(String(item.valor)) + '" required>');
       campo("Categoria", selectCategoria(item.categoria));
-      campo("Data", '<input type="date" id="mData" value="' + (item.data && item.data !== "undefined" ? item.data : "") + '">');
-      campo("Mês", '<input type="month" id="mMes" value="' + item.mes + '" required>');
+      campo("Data", '<input type="date" id="mData" value="' + escapeHTML(item.data && item.data !== "undefined" ? item.data : "") + '">');
+      campo("Mês", '<input type="month" id="mMes" value="' + escapeHTML(item.mes) + '" required>');
     } else {
-      campo("Valor total (R$)", '<input type="number" id="mValor" min="0" step="0.01" value="' + item.valorTotal + '" required>');
-      campo("Parcelas", '<input type="number" id="mParcelas" min="1" max="48" value="' + item.parcelas + '" required>');
+      campo("Valor total (R$)", '<input type="number" id="mValor" min="0" step="0.01" value="' + escapeHTML(String(item.valorTotal)) + '" required>');
+      campo("Parcelas", '<input type="number" id="mParcelas" min="1" max="48" value="' + escapeHTML(String(item.parcelas)) + '" required>');
       campo("Categoria", selectCategoria(item.categoria));
-      campo("Mês da 1ª parcela", '<input type="month" id="mMes" value="' + item.mesInicio + '" required>');
+      campo("Mês da 1ª parcela", '<input type="month" id="mMes" value="' + escapeHTML(item.mesInicio) + '" required>');
     }
 
     el("modalOverlay").hidden = false;
@@ -277,6 +288,79 @@
 
   function escapeHTML(s) {
     return s.replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+  }
+
+  function getSenhaHash() {
+    try {
+      return localStorage.getItem("controleGastosSenha") || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function setSenhaHash(h) {
+    try {
+      if (h) localStorage.setItem("controleGastosSenha", h);
+      else localStorage.removeItem("controleGastosSenha");
+    } catch (e) { /* ignore */ }
+  }
+
+  async function hashSenha(senha) {
+    const data = new TextEncoder().encode("controle-gastos:" + senha);
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function senhaDefinida() {
+    return getSenhaHash() !== "";
+  }
+
+  function atualizarPainelSenha() {
+    const tem = senhaDefinida();
+    el("senhaStatus").textContent = tem ? "Senha definida. O app pedirá a senha ao abrir." : "Nenhuma senha definida.";
+    el("btnSenhaRemover").style.display = tem ? "" : "none";
+    el("senhaInput").placeholder = tem ? "Digite nova senha" : "Digite uma senha";
+  }
+
+  function exportarDados() {
+    const d = new Date();
+    const nome = "controle-gastos-" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + ".json";
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  async function importarDados(file) {
+    try {
+      const texto = await file.text();
+      const d = JSON.parse(texto);
+      if (!d || typeof d !== "object") throw new Error("inválido");
+      if (!Array.isArray(d.receitas)) d.receitas = [];
+      if (!Array.isArray(d.gastos)) d.gastos = [];
+      if (!Array.isArray(d.cartao)) d.cartao = [];
+      d.receitas = d.receitas.filter(r => typeof r.descricao === "string" && r.descricao.length <= 200);
+      d.gastos = d.gastos.filter(g => typeof g.descricao === "string" && g.descricao.length <= 200);
+      d.cartao.forEach(c => {
+        if (typeof c.descricao !== "string" || c.descricao.length > 200) c.descricao = "Compra no cartão";
+        c.parcelas = Math.max(1, Math.min(480, Math.floor(Number(c.parcelas)) || 1));
+        c.valorTotal = Number(c.valorTotal) || 0;
+      });
+      d.gastos.forEach(g => { g.valor = Number(g.valor) || 0; });
+      d.receitas.forEach(r => { r.valor = Number(r.valor) || 0; });
+      dados = d;
+      salvarMes();
+      atualizarUI();
+      el("importFile").value = "";
+      alert("Dados importados com sucesso.");
+    } catch (e) {
+      alert("Arquivo inválido. Não foi possível importar.");
+    }
   }
 
   document.querySelectorAll(".side-item").forEach(tab => {
@@ -301,6 +385,46 @@
   overlay.addEventListener("click", fecharMenu);
 
   el("filtroTipo").addEventListener("change", renderEditar);
+  el("btnExportar").addEventListener("click", exportarDados);
+  el("importFile").addEventListener("change", e => {
+    if (e.target.files && e.target.files[0]) importarDados(e.target.files[0]);
+  });
+
+  el("formSenha").addEventListener("submit", async e => {
+    e.preventDefault();
+    const nova = el("senhaInput").value;
+    if (nova.length < 4) {
+      alert("A senha deve ter pelo menos 4 caracteres.");
+      return;
+    }
+    const h = await hashSenha(nova);
+    setSenhaHash(h);
+    el("senhaInput").value = "";
+    atualizarPainelSenha();
+    alert("Senha definida com sucesso.");
+  });
+
+  el("btnSenhaRemover").addEventListener("click", () => {
+    if (!confirm("Remover a senha de acesso?")) return;
+    setSenhaHash("");
+    el("senhaInput").value = "";
+    atualizarPainelSenha();
+    alert("Senha removida.");
+  });
+
+  el("formLogin").addEventListener("submit", async e => {
+    e.preventDefault();
+    const h = await hashSenha(el("loginSenha").value);
+    if (h === getSenhaHash()) {
+      el("loginOverlay").hidden = true;
+      el("loginErro").hidden = true;
+      el("loginSenha").value = "";
+      atualizarUI();
+    } else {
+      el("loginErro").hidden = false;
+      el("loginSenha").value = "";
+    }
+  });
 
   el("formReceita").addEventListener("submit", e => {
     e.preventDefault();
@@ -392,5 +516,13 @@
   el("prevMonth").addEventListener("click", () => { mes--; if (mes < 0) { mes = 11; ano--; } salvarMes(); atualizarUI(); });
   el("nextMonth").addEventListener("click", () => { mes++; if (mes > 11) { mes = 0; ano++; } salvarMes(); atualizarUI(); });
 
-  atualizarUI();
+  atualizarPainelSenha();
+
+  if (senhaDefinida()) {
+    el("loginOverlay").hidden = false;
+    el("loginSenha").focus();
+  } else {
+    el("loginOverlay").hidden = true;
+    atualizarUI();
+  }
 })();
