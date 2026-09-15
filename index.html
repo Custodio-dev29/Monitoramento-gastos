@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1e293b">
+<title>Controle de Gastos</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <span class="brand-icon">฿</span>
+    <span>Controle de Gastos</span>
+  </div>
+  <nav class="side-nav">
+    <button class="side-item active" data-tab="resumo">
+      <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z"/></svg>
+      <span>Resumo</span>
+    </button>
+    <button class="side-item" data-tab="receitas">
+      <svg viewBox="0 0 24 24"><path d="M12 20V4M5 11l7-7 7 7"/></svg>
+      <span>Receitas</span>
+    </button>
+    <button class="side-item" data-tab="gastos">
+      <svg viewBox="0 0 24 24"><path d="M12 4v16M5 13l7 7 7-7"/></svg>
+      <span>Gastos</span>
+    </button>
+    <button class="side-item" data-tab="cartao">
+      <svg viewBox="0 0 24 24" style="fill:none;stroke-width:1.6"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 10h18"/></svg>
+      <span>Cartão</span>
+    </button>
+    <button class="side-item" data-tab="editar">
+      <svg viewBox="0 0 24 24" style="fill:none;stroke-width:1.6"><path d="M16.86 2.7a2 2 0 0 1 2.83 0l1.6 1.6a2 2 0 0 1 0 2.83L9 19.5 3 21l1.5-6z"/></svg>
+      <span>Editar</span>
+    </button>
+  </nav>
+  <div class="side-foot">Dados salvos neste aparelho.</div>
+</aside>
+<div class="overlay" id="overlay"></div>
+
+<div class="content">
+  <header>
+    <button class="hamburger" id="menuToggle" aria-label="Abrir menu">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div class="month-nav">
+      <button id="prevMonth" title="Mês anterior">&laquo;</button>
+      <span id="monthLabel"></span>
+      <button id="nextMonth" title="Próximo mês">&raquo;</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="aba-resumo" class="aba">
+      <div class="cards">
+        <div class="card receitas">
+          <div class="label">Receitas</div>
+          <div class="value" id="totalReceitas">R$ 0,00</div>
+        </div>
+        <div class="card gastos">
+          <div class="label">Gastos</div>
+          <div class="value" id="totalGastos">R$ 0,00</div>
+        </div>
+        <div class="card saldo">
+          <div class="label">Saldo</div>
+          <div class="value" id="saldo">R$ 0,00</div>
+        </div>
+      </div>
+
+      <section class="painel">
+        <h2>Gastos por categoria</h2>
+        <div id="resumoCategorias"></div>
+      </section>
+    </section>
+
+    <section id="aba-receitas" class="aba hidden">
+      <section class="painel">
+        <h2>Adicionar receita</h2>
+        <form id="formReceita">
+          <input type="text" id="recDesc" placeholder="Descrição (ex.: Salário)" required>
+          <div class="val-group">
+            <input type="number" id="recValor" placeholder="Valor (R$)" min="0" step="0.01" required>
+            <button class="btn" type="submit">Adicionar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="painel">
+        <h2>Receitas do mês</h2>
+        <div class="list" id="listaReceitas"></div>
+      </section>
+    </section>
+
+    <section id="aba-gastos" class="aba hidden">
+      <section class="painel">
+        <h2>Adicionar gasto</h2>
+        <form id="formGasto">
+          <input type="text" id="gastoDesc" placeholder="Descrição (ex.: Supermercado)" required>
+          <div class="val-group">
+            <select id="gastoCategoria" required>
+              <option value="Moradia">Moradia</option>
+              <option value="Alimentação">Alimentação</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Saúde">Saúde</option>
+              <option value="Educação">Educação</option>
+              <option value="Lazer">Lazer</option>
+              <option value="Assinaturas">Assinaturas</option>
+              <option value="Outros">Outros</option>
+            </select>
+            <input type="number" id="gastoValor" placeholder="Valor (R$)" min="0" step="0.01" required>
+          </div>
+          <div class="val-group">
+            <input type="date" id="gastoData">
+            <button class="btn" type="submit">Adicionar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="painel">
+        <h2>Gastos do mês</h2>
+        <div class="list" id="listaGastos"></div>
+      </section>
+    </section>
+
+    <section id="aba-cartao" class="aba hidden">
+      <section class="painel">
+        <h2>Adicionar compra no cartão</h2>
+        <p class="hint">A primeira parcela será lançada em <strong id="cartaoMesInfo"></strong>.</p>
+        <form id="formCartao">
+          <input type="text" id="cartaoDesc" placeholder="Descrição (ex.: Notebook)" required>
+          <div class="val-group">
+            <select id="cartaoCategoria" required>
+              <option value="Moradia">Moradia</option>
+              <option value="Alimentação">Alimentação</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Saúde">Saúde</option>
+              <option value="Educação">Educação</option>
+              <option value="Lazer">Lazer</option>
+              <option value="Assinaturas">Assinaturas</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="val-group">
+            <input type="number" id="cartaoValor" placeholder="Valor total (R$)" min="0" step="0.01" required>
+            <input type="number" id="cartaoParcelas" placeholder="Parcelas" min="1" max="48" value="1" required>
+          </div>
+          <div class="val-group">
+            <button class="btn" type="submit">Adicionar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="painel">
+        <h2>Compras no cartão</h2>
+        <div class="list" id="listaCartao"></div>
+      </section>
+    </section>
+
+    <section id="aba-editar" class="aba hidden">
+      <section class="painel">
+        <h2>Editar / deletar lançamentos</h2>
+        <div class="val-group">
+          <select id="filtroTipo">
+            <option value="todos">Todos</option>
+            <option value="receitas">Receitas</option>
+            <option value="gastos">Gastos</option>
+            <option value="cartao">Cartão</option>
+          </select>
+        </div>
+        <p class="hint">Toque em um lançamento para editar ou deletar.</p>
+      </section>
+
+      <section class="painel">
+        <div class="list" id="listaEditar"></div>
+      </section>
+    </section>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal">
+    <h3 id="modalTitulo">Editar</h3>
+    <form id="modalForm">
+      <label>Descrição</label>
+      <input type="text" id="mDesc" required>
+      <div id="modalCamposExtras"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn del-btn" id="mDeletar">Deletar</button>
+        <div class="modal-actions-right">
+          <button type="button" class="btn ghost" id="mCancelar">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
