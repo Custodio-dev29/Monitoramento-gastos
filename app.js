@@ -269,7 +269,7 @@
     } else if (tipo === "gasto") {
       campo("Valor (R$)", '<input type="number" id="mValor" min="0" step="0.01" value="' + escapeHTML(String(item.valor)) + '" required>');
       campo("Categoria", selectCategoria(item.categoria));
-      campo("Data", '<input type="date" id="mData" value="' + escapeHTML(item.data && item.data !== "undefined" ? item.data : "") + '">');
+      campo("Data", '<input type="date" id="mData" value="' + escapeHTML(item.data || "") + '">');
       campo("Mês", '<input type="month" id="mMes" value="' + escapeHTML(item.mes) + '" required>');
     } else {
       campo("Valor total (R$)", '<input type="number" id="mValor" min="0" step="0.01" value="' + escapeHTML(String(item.valorTotal)) + '" required>');
