@@ -305,10 +305,59 @@
     } catch (e) { /* ignore */ }
   }
 
-  async function hashSenha(senha) {
-    const data = new TextEncoder().encode("controle-gastos:" + senha);
-    const buf = await crypto.subtle.digest("SHA-256", data);
+  function bytesToHex(buf) {
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  async function randomBytes(len) {
+    if (crypto && crypto.getRandomValues) {
+      const arr = new Uint8Array(len);
+      crypto.getRandomValues(arr);
+      return arr;
+    }
+    return null;
+  }
+
+  async function hashSenha(senha) {
+    const salt = await randomBytes(16);
+    const pepper = "controle-gastos:v1";
+    if (salt) {
+      const enc = new TextEncoder();
+      const data = new Uint8Array(salt.length + enc.encode(pepper + senha).length);
+      data.set(salt, 0);
+      data.set(enc.encode(pepper + senha), salt.length);
+      const buf = await crypto.subtle.digest("SHA-256", data);
+      return bytesToHex(salt) + ":" + bytesToHex(buf);
+    }
+    const data = new TextEncoder().encode("controle-gastos:v1:" + senha);
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return "legacy:" + bytesToHex(buf);
+  }
+
+  async function senhaValida(senha) {
+    const stored = getSenhaHash();
+    if (!stored) return false;
+    const enc = new TextEncoder();
+    const pepper = "controle-gastos:v1";
+    if (stored.includes(":") && !stored.startsWith("legacy:")) {
+      const [saltHex, hashHex] = stored.split(":");
+      try {
+        const salt = new Uint8Array(saltHex.match(/.{2}/g).map(x => parseInt(x, 16)));
+        const data = new Uint8Array(salt.length + enc.encode(pepper + senha).length);
+        data.set(salt, 0);
+        data.set(enc.encode(pepper + senha), salt.length);
+        const buf = await crypto.subtle.digest("SHA-256", data);
+        const h = bytesToHex(buf);
+        if (h.length !== hashHex.length) return false;
+        if (h === hashHex) return true;
+        return false;
+      } catch (e) { return false; }
+    }
+    const legacy = stored.startsWith("legacy:") ? stored.slice(7) : stored;
+    const dataLegacy = enc.encode("controle-gastos:" + senha);
+    const bufLegacy = await crypto.subtle.digest("SHA-256", dataLegacy);
+    const hLegacy = bytesToHex(bufLegacy);
+    return hLegacy === legacy;
   }
 
   function senhaDefinida() {
@@ -393,8 +442,8 @@
   el("formSenha").addEventListener("submit", async e => {
     e.preventDefault();
     const nova = el("senhaInput").value;
-    if (nova.length < 4) {
-      alert("A senha deve ter pelo menos 4 caracteres.");
+    if (nova.length < 6) {
+      alert("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
     const h = await hashSenha(nova);
@@ -414,8 +463,8 @@
 
   el("formLogin").addEventListener("submit", async e => {
     e.preventDefault();
-    const h = await hashSenha(el("loginSenha").value);
-    if (h === getSenhaHash()) {
+    const ok = await senhaValida(el("loginSenha").value);
+    if (ok) {
       el("loginOverlay").hidden = true;
       el("loginErro").hidden = true;
       el("loginSenha").value = "";
