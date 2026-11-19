@@ -118,7 +118,7 @@ header {
 }
 .hamburger svg { width: 22px; height: 22px; stroke: currentColor; fill: none; }
 .hamburger:hover { background: var(--bg); }
-.month-nav { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.month-nav { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .month-nav button {
   background: var(--bg);
   border: none;
@@ -130,6 +130,10 @@ header {
 }
 .month-nav button:hover { background: var(--border); }
 #monthLabel { font-weight: 600; min-width: 118px; text-align: center; font-size: 0.9375rem; }
+.form-totals { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; }
+.form-total strong { font-size: 0.8125rem; }
+.form-total.receita strong { color: var(--green); }
+.form-total.gasto strong { color: var(--red); }
 
 main {
   width: 100%;
@@ -316,6 +320,9 @@ body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 520px) {
   main { padding: 12px; }
+  header { padding: 8px 10px; gap: 6px; }
+  .month-nav { gap: 4px; }
+  .form-totals { justify-content: space-between; gap: 6px; }
   .cards { grid-template-columns: 1fr; gap: 10px; }
   .val-group { flex-wrap: wrap; }
   .val-group input, .val-group select { flex-basis: 100%; }

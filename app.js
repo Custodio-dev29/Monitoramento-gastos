@@ -97,6 +97,12 @@
     const saldoEl = el("saldo");
     saldoEl.textContent = fmtR(tr - tg);
     saldoEl.style.color = tr - tg >= 0 ? "var(--green)" : "var(--red)";
+    document.querySelectorAll(".form-total-receitas").forEach(item => item.textContent = fmtR(tr));
+    document.querySelectorAll(".form-total-gastos").forEach(item => item.textContent = fmtR(tg));
+    document.querySelectorAll(".form-total-saldo").forEach(item => {
+      item.textContent = fmtR(tr - tg);
+      item.style.color = tr - tg >= 0 ? "var(--green)" : "var(--red)";
+    });
 
     if (el("cartaoMesInfo")) el("cartaoMesInfo").textContent = nomeMes();
 
@@ -164,25 +170,32 @@
 
   function renderCartao() {
     const box = el("listaCartao");
-    if (dados.cartao.length === 0) {
-      box.innerHTML = '<div class="empty">Nenhuma compra no cartão.</div>';
+    const k = chave();
+    const compras = dados.cartao.filter(c =>
+      c.mesInicio === k || parcelasDoMes(k).some(p => p.cartaoId === c.id)
+    );
+    if (compras.length === 0) {
+      box.innerHTML = '<div class="empty">Nenhuma compra no cartão neste mês.</div>';
       return;
     }
     box.innerHTML = "";
-    dados.cartao.forEach(c => {
+    compras.forEach(c => {
       const div = document.createElement("div");
       div.className = "item clickable";
       const parcela = fmtR(Math.round(c.valorTotal / c.parcelas * 100) / 100);
       const mesInicio = c.mesInicio.split("-").reverse().join("/");
+      const parcelaAtual = parcelasDoMes(k).find(p => p.cartaoId === c.id);
+      const numeroParcela = parcelaAtual ? parcelaAtual.parcela : 1;
       const meta = (c.parcelas > 1 ? c.parcelas + "x de " + parcela : fmtR(c.valorTotal)) +
                    " • Início: " + mesInicio +
+                   (c.parcelas > 1 ? " • Parcela " + numeroParcela + "/" + c.parcelas : "") +
                    (c.categoria ? " • " + c.categoria : "");
       div.innerHTML =
         '<div class="info">' +
           '<div class="desc">' + escapeHTML(c.descricao) + '</div>' +
           '<div class="meta">' + escapeHTML(meta) + '</div>' +
         '</div>' +
-        '<span class="valor saida">' + fmtR(c.valorTotal) + '</span>';
+        '<span class="valor saida">' + fmtR(c.parcelas > 1 ? Math.round(c.valorTotal / c.parcelas * 100) / 100 : c.valorTotal) + '</span>';
       div.addEventListener("click", () => abrirModal("cartao", c.id));
       box.appendChild(div);
     });
@@ -417,6 +430,7 @@
       aba = tab.dataset.tab;
       document.querySelectorAll(".side-item").forEach(t => t.classList.toggle("active", t === tab));
       document.querySelectorAll(".aba").forEach(a => a.classList.toggle("hidden", a.id !== "aba-" + aba));
+      atualizarUI();
       fecharMenu();
     });
   });
